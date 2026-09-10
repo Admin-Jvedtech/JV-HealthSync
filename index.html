@@ -238,10 +238,18 @@
     <input type="text" id="name-input" placeholder="Your name" autofocus>
     <select id="college-select">
       <option value="" disabled selected>Select your college</option>
-      <option value="Manipal Institute of Higher Education (MAHE)">Manipal Institute of Higher Education (MAHE)</option>
+      <option value="TAPMI MAHE BENGALURU">TAPMI MAHE BENGALURU</option>
+      <option value="TAPMI MANGALORE IPM">TAPMI MANGALORE IPM</option>
       <option value="Other">Other</option>
     </select>
     <input type="text" id="college-other" placeholder="Enter your college name" class="hidden">
+    <select id="gender-select">
+      <option value="" disabled selected>Select your gender</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+      <option value="Other">Other</option>
+      <option value="Prefer not to say">Prefer not to say</option>
+    </select>
     <button type="button" class="submit-btn" id="name-submit">Start my journal</button>
   </div>
 </div>
@@ -546,6 +554,7 @@
 const STORAGE_KEY = 'lanelog:journal';
 const NAME_KEY = 'lanelog:studentName';
 const COLLEGE_KEY = 'lanelog:college';
+const GENDER_KEY = 'lanelog:gender';
 const SHEET_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzte0eCIDamwkwkZO-jd4c6MrI_QvH6vghluSa3Ml4XjxrPWh_Qxh0S29b77-Dc78QsOQ/exec';
 
 let state = {
@@ -556,6 +565,7 @@ let state = {
 };
 let studentName = '';
 let studentCollege = '';
+let studentGender = '';
 let currentMood = null;
 let currentGratitude = null;
 let waterVal = 0;
@@ -574,6 +584,11 @@ function getCollege(){ return localStorage.getItem(COLLEGE_KEY) || ''; }
 function setCollege(college){
   studentCollege = college.trim();
   localStorage.setItem(COLLEGE_KEY, studentCollege);
+}
+function getGender(){ return localStorage.getItem(GENDER_KEY) || ''; }
+function setGender(gender){
+  studentGender = gender.trim();
+  localStorage.setItem(GENDER_KEY, studentGender);
 }
 
 async function loadData(){
@@ -609,7 +624,7 @@ function syncToSheet(type, title, details){
   try{
     fetch(SHEET_WEBAPP_URL, {
       method:'POST', mode:'no-cors',
-      body: JSON.stringify({ student: studentName, college: studentCollege, type, title, details, ts: Date.now() })
+      body: JSON.stringify({ student: studentName, college: studentCollege, gender: studentGender, type, title, details, ts: Date.now() })
     }).catch(()=>{});
   }catch(err){}
 }
@@ -1098,10 +1113,13 @@ document.getElementById('name-submit').addEventListener('click', ()=>{
   const collegeChoice = document.getElementById('college-select').value;
   const collegeOther = document.getElementById('college-other').value.trim();
   const college = collegeChoice === 'Other' ? collegeOther : collegeChoice;
+  const gender = document.getElementById('gender-select').value;
   if(!val) return;
   if(!college){ showToast('Please select your college'); return; }
+  if(!gender){ showToast('Please select your gender'); return; }
   setStudentName(val);
   setCollege(college);
+  setGender(gender);
   document.getElementById('name-gate').classList.add('hidden');
   document.getElementById('disclaimer-gate').classList.remove('hidden');
 });
@@ -1170,6 +1188,7 @@ function populateFormsFromState(){
   if(headerLogo) document.getElementById('gate-logo').src = headerLogo.src;
   studentName = getStudentName();
   studentCollege = getCollege();
+  studentGender = getGender();
   buildWaterRow();
   buildEnergyRow();
   updateNutritionBadges();
